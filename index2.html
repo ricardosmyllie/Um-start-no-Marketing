@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dilemas e Decisões: O Império Gráfico</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f9;
+            color: #2c3e50;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        #game-container {
+            background: #ffffff;
+            max-width: 700px;
+            width: 100%;
+            padding: 35px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            border-top: 6px solid #e74c3c;
+        }
+        h1 {
+            color: #2c3e50;
+            font-size: 1.8em;
+            text-align: center;
+            border-bottom: 2px solid #e74c3c;
+            padding-bottom: 12px;
+            margin-top: 0;
+        }
+        #story-text {
+            font-size: 1.15em;
+            line-height: 1.8;
+            margin-bottom: 25px;
+            text-align: justify;
+            white-space: pre-wrap;
+        }
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        .option-wrapper {
+            position: relative;
+        }
+        input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+        }
+        .option-label {
+            display: block;
+            padding: 18px;
+            border: 2px solid #ecf0f1;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            background: #fafbfc;
+            font-size: 1.05em;
+        }
+        .option-label:hover {
+            border-color: #e74c3c;
+            background: #fdf2f1;
+        }
+        input[type="radio"]:checked + .option-label {
+            border-color: #e74c3c;
+            background: #fadbd8;
+            font-weight: bold;
+            box-shadow: 0 0 8px rgba(231, 76, 60, 0.3);
+        }
+        #confirm-btn {
+            width: 100%;
+            padding: 16px;
+            background-color: #2c3e50;
+            color: #ffffff;
+            font-size: 1.2em;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        #confirm-btn:hover {
+            background-color: #1a252f;
+        }
+        #error-msg {
+            color: #c0392b;
+            text-align: center;
+            margin-bottom: 15px;
+            font-weight: bold;
+            display: none;
+        }
+        .ending-title {
+            color: #e74c3c;
+            font-size: 1.6em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <h1 id="game-title">Dilemas e Decisões: O Império Gráfico</h1>
+    <div id="story-text">Carregando história...</div>
+    
+    <div id="error-msg">Por favor, selecione uma opção para continuar.</div>
+    
+    <div class="options-container" id="options-container">
+    </div>
+
+    <button id="confirm-btn">CONFIRMA</button>
+</div>
+
+<script>
+    const storyData = {
+        // NÍVEL 1
+        start: {
+            text: "CAPÍTULO 1: O INÍCIO DA JORNADA\n\nO setor de artes gráficas e comunicação visual passa por uma transformação profunda. Você decidiu abrir seu próprio negócio, mas o orçamento inicial é enxuto. O primeiro grande dilema surge e essa decisão moldará sua estrutura operacional. Onde você vai estabelecer sua base de operações?",
+            opt1: { text: "Operar exclusivamente online como estúdio fechado, atuando como revendedor gráfico terceirizado para manter o custo fixo próximo de zero.", next: "node_A" },
+            opt2: { text: "Assinar o aluguel de uma loja física em uma rua movimentada. O risco financeiro é maior, mas o ponto de venda atrai o público passante.", next: "node_B" }
+        },
+        
+        // NÍVEL 2
+        node_A: {
+            text: "CAPÍTULO 2: O ECO DIGITAL\n\nOperando do seu estúdio, a ausência de uma placa na rua significa que sua presença digital precisa ser impecável. Você precisa definir rapidamente quem é o seu cliente ideal para direcionar seus esforços de prospecção.",
+            opt1: { text: "Ser um 'clínico geral'. Focar em atrair consumidores finais (B2C) vendendo papelaria básica, convites e materiais rápidos de baixo custo.", next: "node_Aa" },
+            opt2: { text: "Ser ultra-nichado. Focar exclusivamente no mercado corporativo (B2B), criando Identidades Visuais e materiais premium para empresas.", next: "node_Ab" }
+        },
+        node_B: {
+            text: "CAPÍTULO 2: O PESO DO ALUGUEL\n\nA loja física está pronta, mas os boletos chegam rápido. A produção precisa começar a girar. O dilema entre investir e terceirizar bate à sua porta.",
+            opt1: { text: "Comprar equipamentos próprios (plotters, impressoras menores) financiados, garantindo o controle total sobre os prazos e a produção local.", next: "node_Ba" },
+            opt2: { text: "Atuar apenas como balcão de captação. Terceirizar 100% da impressão com grandes gráficas de revenda offset e focar apenas no atendimento.", next: "node_Bb" }
+        },
+
+        // NÍVEL 3
+        node_Aa: {
+            text: "CAPÍTULO 3: A AVALANCHE DE PEDIDOS PEQUENOS\n\nSua estratégia digital deu certo. Uma enxurrada de pedidos de cartões, panfletos e adesivos chega todo dia. O volume é alto, mas a margem de lucro por pedido é pequena.",
+            opt1: { text: "Automatizar a produção. Implementar softwares e templates rápidos para acelerar a entrega, sacrificando a originalidade pelo volume.", next: "node_Aa1" },
+            opt2: { text: "Focar na qualidade premium. Elevar os preços, fazer acabamentos artesanais e tentar aumentar o ticket médio.", next: "node_Aa2" }
+        },
+        node_Ab: {
+            text: "CAPÍTULO 3: O CONTRATO CORPORATIVO\n\nVocê fechou contratos com duas grandes empresas da região. Eles confiam na sua gestão de marca, mas exigem atenção constante. Como você estrutura o seu serviço de criação?",
+            opt1: { text: "Cobrar por projeto fechado com um limite rígido de alterações, protegendo seu tempo de produção.", next: "node_Ab1" },
+            opt2: { text: "Vender pacotes fechados mensais (fee) com alterações ilimitadas, priorizando a retenção e satisfação total do cliente.", next: "node_Ab2" }
+        },
+        node_Ba: {
+            text: "CAPÍTULO 3: AS MÁQUINAS NÃO PARAM\n\nSua plotter está rodando dia e noite. Uma grande demanda por brindes e têxteis surge. É hora de decidir sobre a expansão do seu mix de produtos.",
+            opt1: { text: "Investir rapidamente em tecnologia DTF (Direct to Film) para estamparia, abraçando a demanda por brindes personalizados.", next: "node_Ba1" },
+            opt2: { text: "Manter o foco apenas em comunicação visual (lonas e adesivos) e usar o dinheiro para criar um programa formal de indicação.", next: "node_Ba2" }
+        },
+        node_Bb: {
+            text: "CAPÍTULO 3: O DOMÍNIO DA REVENDA\n\nTerceirizar foi a escolha certa. Sem máquinas quebrando, você foca 100% em vendas. Você percebe que seus clientes de impresso também precisam de ajuda no digital.",
+            opt1: { text: "Oferecer novos serviços digitais. Vender gestão de tráfego pago para os clientes que já compram seus materiais gráficos.", next: "node_Bb1" },
+            opt2: { text: "Manter o foco no setor gráfico. Expandir as vendas para grandes formatos, como fachadas e sinalização externa (ACM e Letreiros).", next: "node_Bb2" }
+        },
+
+        // NÍVEL 4
+        node_Aa1: {
+            text: "CAPÍTULO 4: A FÁBRICA DE TEMPLATES\n\nVocê virou uma máquina de produzir artes rápidas. Para continuar crescendo, você precisa escalar o atendimento e a criação.",
+            opt1: { text: "Implementar Inteligência Artificial para gerar conceitos de design em segundos.", next: "node_Aa1_L5" },
+            opt2: { text: "Criar uma plataforma Web-to-Print, onde o próprio cliente edita a arte e finaliza a compra online.", next: "node_Aa2_L5" }
+        },
+        node_Aa2: {
+            text: "CAPÍTULO 4: O ESTÚDIO BOUTIQUE\n\nSeus acabamentos especiais atraíram um público que paga caro por experiência. O nível de exigência agora é estético e técnico.",
+            opt1: { text: "Investir pesado no desenvolvimento de uma 'assinatura visual' própria, sendo contratado pelo seu estilo.", next: "node_Aa3_L5" },
+            opt2: { text: "Atuar como um especialista técnico, focando em design voltado exclusivamente para alta fidelidade de cor e conversão.", next: "node_Aa4_L5" }
+        },
+        node_Ab1: {
+            text: "CAPÍTULO 4: REGRAS RÍGIDAS\n\nO limite de alterações educou seus clientes, mas gerou alguns atritos. Você precisa equilibrar o relacionamento com a entrega de resultados.",
+            opt1: { text: "Oferecer inteligência de dados: entregar relatórios mensais de análise de resultados das campanhas criadas.", next: "node_Ab1_L5" },
+            opt2: { text: "Focar em encantar no offline: enviar embalagens personalizadas com brindes físicos para os clientes VIPs.", next: "node_Ab2_L5" }
+        },
+        node_Ab2: {
+            text: "CAPÍTULO 4: O PARCEIRO MENSAL\n\nO formato de mensalidade garantiu estabilidade. É o momento de repensar a estratégia da marca do seu próprio estúdio.",
+            opt1: { text: "Abandonar seu nome próprio e criar uma marca empresarial escalável (agência full service).", next: "node_Ab3_L5" },
+            opt2: { text: "Posicionar-se firmemente como uma boutique de criação super especializada com autoridade pessoal.", next: "node_Ab4_L5" }
+        },
+        node_Ba1: {
+            text: "CAPÍTULO 4: O IMPÉRIO DOS BRINDES\n\nBrindes DTF dominam seu faturamento. A concorrência por preço na cidade é brutal. Você precisa proteger suas margens.",
+            opt1: { text: "Focar em tráfego pago para vender brindes a nível nacional e despachar por transportadora.", next: "node_Ba1_L5" },
+            opt2: { text: "Dedicar tempo para entrar em licitações públicas, buscando contratos de fornecimento em massa.", next: "node_Ba2_L5" }
+        },
+        node_Ba2: {
+            text: "CAPÍTULO 4: A FORÇA DA RUA\n\nAs indicações encheram sua agenda. A comunicação visual da sua loja é a referência da região. Porém, as máquinas estão sofrendo desgaste.",
+            opt1: { text: "Pagar contratos de manutenção técnica preventiva para garantir que a operação nunca pare.", next: "node_Ba3_L5" },
+            opt2: { text: "Aprender você mesmo a consertar e fazer a manutenção básica das máquinas para economizar recursos.", next: "node_Ba4_L5" }
+        },
+        node_Bb1: {
+            text: "CAPÍTULO 4: O HÍBRIDO PERFEITO\n\nVender impresso e gestão de tráfego dobrou seu faturamento. Os clientes veem você como um consultor estratégico.",
+            opt1: { text: "Oferecer produtos híbridos: materiais físicos com QR Codes dinâmicos que se conectam com o tráfego online.", next: "node_Bb1_L5" },
+            opt2: { text: "Digitalizar tudo: convencer clientes a migrar para cardápios e catálogos 100% digitais.", next: "node_Bb2_L5" }
+        },
+        node_Bb2: {
+            text: "CAPÍTULO 4: FACHADAS E LETREIROS\n\nVocê fechou contratos de grandes fachadas. A logística e instalação tornaram-se o coração do seu negócio.",
+            opt1: { text: "Comprar um veículo próprio, garantindo controle logístico absoluto nas entregas e instalações.", next: "node_Bb3_L5" },
+            opt2: { text: "Terceirizar a instalação e o frete com montadores independentes, mantendo o negócio enxuto.", next: "node_Bb4_L5" }
+        },
+
+        // NÍVEL 5 (As escolhas finais)
+        node_Aa1_L5: {
+            text: "CAPÍTULO 5: A REVOLUÇÃO DA MÁQUINA\n\nA tecnologia assumiu boa parte do trabalho criativo. O lucro disparou. Como líder, qual seu último passo de consolidação?",
+            opt1: { text: "Priorizar o lucro máximo e a performance tecnológica.", next: "final_1" },
+            opt2: { text: "Reinvestir na humanização e atendimento personalizado.", next: "final_2" }
+        },
+        node_Aa2_L5: {
+            text: "CAPÍTULO 5: A ESTEIRA INVISÍVEL\n\nA plataforma online é um sucesso. Você gerencia tudo por um painel digital. O que fazer agora?",
+            opt1: { text: "Planejar a expansão com pontos físicos de coleta franqueados.", next: "final_3" },
+            opt2: { text: "Manter um negócio ultra-enxuto e viver a liberdade geográfica.", next: "final_4" }
+        },
+        node_Aa3_L5: {
+            text: "CAPÍTULO 5: O PESO DO NOME\n\nSeu estilo visual virou um status no mercado. Clientes esperam meses na fila.",
+            opt1: { text: "Criar treinamentos para ensinar sua técnica a outros profissionais.", next: "final_5" },
+            opt2: { text: "Focar exclusivamente na prestação de serviço de elite.", next: "final_6" }
+        },
+        node_Aa4_L5: {
+            text: "CAPÍTULO 5: O MESTRE TÉCNICO\n\nNenhuma gráfica imprime melhor que seus arquivos. Você é o favorito das grandes agências.",
+            opt1: { text: "Trabalhar como o braço de produção técnica para grandes agências publicitárias.", next: "final_7" },
+            opt2: { text: "Buscar o cliente corporativo final diretamente para aumentar suas margens.", next: "final_8" }
+        },
+        node_Ab1_L5: {
+            text: "CAPÍTULO 5: O CIENTISTA DOS DADOS\n\nO cliente corporativo busca retorno sobre investimento. O design agora é medido por resultados.",
+            opt1: { text: "Focar 100% em análise de dados e performance de tráfego.", next: "final_9" },
+            opt2: { text: "Contratar um sócio de dados para você voltar a focar na estética criativa.", next: "final_10" }
+        },
+        node_Ab2_L5: {
+            text: "CAPÍTULO 5: A EXPERIÊNCIA SENSORIAL\n\nO cuidado com as embalagens gerou um marketing espontâneo brutal nas redes sociais.",
+            opt1: { text: "Adotar uma linha 100% sustentável com materiais reciclados premium.", next: "final_11" },
+            opt2: { text: "Focar em embalagens tecnológicas e brindes corporativos modernos.", next: "final_12" }
+        },
+        node_Ab3_L5: {
+            text: "CAPÍTULO 5: A MÁQUINA CORPORATIVA\n\nA marca da sua agência ganha vida própria no mercado regional.",
+            opt1: { text: "Focar no networking presencial com indústrias e empresas tradicionais.", next: "final_13" },
+            opt2: { text: "Investir em networking digital e plataformas para atrair startups.", next: "final_14" }
+        },
+        node_Ab4_L5: {
+            text: "CAPÍTULO 5: O GURU DO BRANDING\n\nVocê agora vende consultoria e estratégia de alto valor.",
+            opt1: { text: "Exigir pagamento antecipado sempre, mantendo o caixa blindado.", next: "final_15" },
+            opt2: { text: "Trabalhar com faturamento para grandes contas corporativas.", next: "final_16" }
+        },
+        node_Ba1_L5: {
+            text: "CAPÍTULO 5: A ESCALA NACIONAL\n\nO tráfego pago traz clientes de todo o país. O volume de envios é constante.",
+            opt1: { text: "Migrar para uma estrutura empresarial completa focada em atacado.", next: "final_17" },
+            opt2: { text: "Voltar o foco para o domínio da margem de lucro no mercado local.", next: "final_18" }
+        },
+        node_Ba2_L5: {
+            text: "CAPÍTULO 5: O BARÃO DAS LICITAÇÕES\n\nO dinheiro público mudou a escala do jogo. Os contratos são volumosos.",
+            opt1: { text: "Estruturar uma equipe interna sólida para gerenciar a burocracia e produção.", next: "final_19" },
+            opt2: { text: "Contratar prestadores de serviço por demanda para manter o custo fixo baixo.", next: "final_20" }
+        },
+        node_Ba3_L5: {
+            text: "CAPÍTULO 5: O RELÓGIO SUÍÇO\n\nAs máquinas nunca param. Você tem a gráfica mais confiável da cidade.",
+            opt1: { text: "Vender a produção excedente para outras agências e revendedores.", next: "final_21" },
+            opt2: { text: "Priorizar o equilíbrio entre trabalho e vida pessoal com o negócio estável.", next: "final_22" }
+        },
+        node_Ba4_L5: {
+            text: "CAPÍTULO 5: O DOMÍNIO TÉCNICO\n\nVocê domina cada engrenagem do negócio. O conhecimento técnico é seu diferencial.",
+            opt1: { text: "Buscar um sócio investidor para modernizar o parque gráfico.", next: "final_23" },
+            opt2: { text: "Vender o maquinário e migrar 100% para os serviços de agência digital.", next: "final_24" }
+        },
+        node_Bb1_L5: {
+            text: "CAPÍTULO 5: A PONTE PARA O FUTURO\n\nSeus materiais unem o mundo físico ao digital perfeitamente.",
+            opt1: { text: "Focar em estratégias de busca online para atrair empresas modernas.", next: "final_25" },
+            opt2: { text: "Apostar na estética das redes sociais para vender inovação visual.", next: "final_26" }
+        },
+        node_Bb2_L5: {
+            text: "CAPÍTULO 5: A DIGITALIZAÇÃO TOTAL\n\nO papel perdeu espaço para as soluções de software no seu portfólio.",
+            opt1: { text: "Transformar a empresa em uma desenvolvedora de tecnologia própria.", next: "final_27" },
+            opt2: { text: "Atuar na revenda e implantação de softwares de terceiros com sua marca.", next: "final_28" }
+        },
+        node_Bb3_L5: {
+            text: "CAPÍTULO 5: O TITÃ DA COMUNICAÇÃO\n\nA montagem de grandes fachadas exige gestão de risco e logística.",
+            opt1: { text: "Investir em uma sede industrial focada em produção pesada.", next: "final_29" },
+            opt2: { text: "Focar na parte criativa e cobrar pelo valor agregado do projeto 3D.", next: "final_30" }
+        },
+        node_Bb4_L5: {
+            text: "CAPÍTULO 5: O ORQUESTRADOR\n\nVocê gerencia uma rede eficiente de terceiros sem precisar produzir nada.",
+            opt1: { text: "Implementar um controle de qualidade rigoroso sobre os parceiros.", next: "final_31" },
+            opt2: { text: "Focar na agilidade comercial e na resolução rápida de imprevistos.", next: "final_32" }
+        },
+
+        // OS 32 FINAIS
+        final_1: { title: "O CEO Tecnológico", text: "Você automatizou sua operação ao máximo. O faturamento é alto e o custo é baixo. Seu negócio tornou-se uma referência de eficiência moderna no setor gráfico.", isEnding: true },
+        final_2: { title: "O Curador Humano", text: "Em um mundo automatizado, seu atendimento personalizado tornou-se um artigo de luxo. Seus clientes valorizam o toque humano e pagam mais por isso.", isEnding: true },
+        final_3: { title: "O Rei da Rede", text: "Seu modelo escalou. Hoje você gerencia uma rede de pontos de coleta que levam sua marca a novos territórios. Você é um gigante da revenda.", isEnding: true },
+        final_4: { title: "O Estrategista Digital", text: "Sem amarras físicas, você opera um negócio lucrativo de qualquer lugar. A tecnologia trabalha para você, garantindo liberdade e rentabilidade.", isEnding: true },
+        final_5: { title: "O Educador do Mercado", text: "Sua autoridade cresceu tanto que ensinar tornou-se mais lucrativo do que produzir. Você agora molda a próxima geração de profissionais do setor.", isEnding: true },
+        final_6: { title: "A Boutique de Luxo", text: "Você mantém a exclusividade total. Seu nome é sinônimo de excelência e seus projetos são disputados pelos clientes mais exigentes do mercado.", isEnding: true },
+        final_7: { title: "O Parceiro das Agências", text: "Você é o braço técnico essencial. As maiores campanhas do mercado passam pela sua revisão final. Sua segurança técnica é sua maior fortuna.", isEnding: true },
+        final_8: { title: "O Consultor Direto", text: "Ao eliminar intermediários, você conquistou a confiança direta das empresas. Suas margens cresceram e seu relacionamento corporativo é sólido.", isEnding: true },
+        final_9: { title: "O Mestre da Performance", text: "O design para você é uma ferramenta de venda. Seus projetos geram milhões em faturamento para seus clientes, consolidando sua agência como essencial.", isEnding: true },
+        final_10: { title: "A Aliança Perfeita", text: "A união entre estética e dados criou uma potência. Você entrega beleza e prova o resultado, tornando seu negócio imbatível na região.", isEnding: true },
+        final_11: { title: "O Visionário Sustentável", text: "Sua marca é o exemplo do novo mercado. A consciência ambiental atraiu grandes empresas e transformou seu propósito em lucro real.", isEnding: true },
+        final_12: { title: "O Líder da Inovação", text: "Seus produtos são experiências futuristas. Você está sempre um passo à frente da concorrência, vendendo o que há de mais moderno em brindes.", isEnding: true },
+        final_13: { title: "A Autoridade Tradicional", text: "Seu nome é respeitado nas indústrias e associações comerciais. O relacionamento sólido construído olho no olho garante sua longevidade.", isEnding: true },
+        final_14: { title: "O Parceiro Tech", text: "Você tornou-se a agência favorita do ecossistema de inovação. Seu design ágil e moderno acompanha o ritmo das empresas que mais crescem.", isEnding: true },
+        final_15: { title: "O Gestor Blindado", text: "Sua disciplina financeira garantiu um caixa inabalável. Você seleciona seus clientes e opera com uma paz que poucos empresários possuem.", isEnding: true },
+        final_16: { title: "O Titã Corporativo", text: "Você aguenta o fôlego que o mercado corporativo exige. Suas parcerias de longo prazo com grandes empresas sustentam seu império gráfico.", isEnding: true },
+        final_17: { title: "O Gigante do Atacado", text: "Você domina o volume. Milhares de pedidos passam pela sua mão diariamente. Sua escala é sua maior vantagem competitiva nacional.", isEnding: true },
+        final_18: { title: "O Dominador Local", text: "Ninguém vence você na sua cidade. A proximidade e a velocidade de entrega tornaram seu negócio a escolha óbvia para o público local.", isEnding: true },
+        final_19: { title: "O Especialista em Contratos", text: "Você domina a arte das grandes licitações. Sua estrutura robusta entrega o que o governo precisa com segurança e previsibilidade.", isEnding: true },
+        final_20: { title: "O Operador Ágil", text: "Sua estrutura enxuta permite que você mude de direção rapidamente. Você aproveita as oportunidades sazonais com custos mínimos.", isEnding: true },
+        final_21: { title: "A Fábrica de Sucesso", text: "Suas máquinas trabalham para o mercado. Você é o motor por trás de muitas outras marcas, otimizando cada minuto de produção.", isEnding: true },
+        final_22: { title: "O Empresário Consciente", text: "Você construiu um negócio estável que respeita seu tempo. Sua gráfica é rentável e sua vida pessoal é equilibrada e plena.", isEnding: true },
+        final_23: { title: "O Renascimento Industrial", text: "A nova sociedade trouxe o fôlego necessário para modernizar tudo. Você voltou a ter prazer em produzir com o que há de melhor no mundo.", isEnding: true },
+        final_24: { title: "A Metamorfose Digital", text: "Você deixou o papel para trás e abraçou o mundo digital. Sua experiência gráfica agora serve de base para uma agência de marketing de ponta.", isEnding: true },
+        final_25: { title: "O Conector de Mundos", text: "Seu SEO é imbatível. Empresas que buscam o novo encontram em você a solução perfeita para unir o físico ao digital com inteligência.", isEnding: true },
+        final_26: { title: "O Esteta das Redes", text: "Sua vitrine digital é perfeita. O impacto visual dos seus materiais atrai clientes pelo desejo, transformando cada post em novos pedidos.", isEnding: true },
+        final_27: { title: "O Fundador Tech", text: "O que começou como uma gráfica agora é uma empresa de tecnologia. Você vende soluções inteligentes e escaláveis para todo o mercado.", isEnding: true },
+        final_28: { title: "O Gestor de Soluções", text: "Você simplifica a vida do cliente. Ao oferecer softwares e serviços, você tornou-se o parceiro indispensável para o varejo local.", isEnding: true },
+        final_29: { title: "O Construtor de Marcas", text: "Suas fachadas moldam a paisagem da cidade. Você transformou a comunicação visual em grandes monumentos comerciais lucrativos.", isEnding: true },
+        final_30: { title: "O Arquiteto Visual", text: "Seu valor está na mente. Seus projetos 3D são tão desejados que a montagem física é apenas um detalhe diante da sua genialidade criativa.", isEnding: true },
+        final_31: { title: "O Maestro da Qualidade", text: "Sua rede de parceiros entrega a perfeição. Você construiu um modelo de revenda onde a confiança é o produto mais valioso.", isEnding: true },
+        final_32: { title: "O Líder do Volume", text: "Você abraçou o mercado de massa. Com agilidade comercial e foco no giro, você construiu um caixa forte através da repetição constante.", isEnding: true }
+    };
+
+    let currentNode = "start";
+    
+    const storyText = document.getElementById("story-text");
+    const optionsContainer = document.getElementById("options-container");
+    const confirmBtn = document.getElementById("confirm-btn");
+    const errorMsg = document.getElementById("error-msg");
+    const gameTitle = document.getElementById("game-title");
+
+    function renderNode(nodeId) {
+        const node = storyData[nodeId];
+        errorMsg.style.display = "none";
+        optionsContainer.innerHTML = "";
+        
+        if (node.isEnding) {
+            gameTitle.innerText = "Decisão Final";
+            storyText.innerHTML = `<div class="ending-title">${node.title}</div>${node.text}`;
+            confirmBtn.innerText = "JOGAR NOVAMENTE";
+            confirmBtn.onclick = () => {
+                currentNode = "start";
+                gameTitle.innerText = "Dilemas e Decisões: O Império Gráfico";
+                confirmBtn.innerText = "CONFIRMA";
+                renderNode(currentNode);
+            };
+        } else {
+            storyText.innerText = node.text;
+            
+            const wrapper1 = document.createElement("div");
+            wrapper1.className = "option-wrapper";
+            wrapper1.innerHTML = `
+                <input type="radio" name="choice" id="opt1" value="${node.opt1.next}">
+                <label class="option-label" for="opt1">A) ${node.opt1.text}</label>
+            `;
+            
+            const wrapper2 = document.createElement("div");
+            wrapper2.className = "option-wrapper";
+            wrapper2.innerHTML = `
+                <input type="radio" name="choice" id="opt2" value="${node.opt2.next}">
+                <label class="option-label" for="opt2">B) ${node.opt2.text}</label>
+            `;
+            
+            optionsContainer.appendChild(wrapper1);
+            optionsContainer.appendChild(wrapper2);
+            
+            confirmBtn.onclick = () => {
+                const selectedOption = document.querySelector('input[name=\"choice\"]:checked');
+                if (selectedOption) {
+                    currentNode = selectedOption.value;
+                    renderNode(currentNode);
+                } else {
+                    errorMsg.style.display = "block";
+                }
+            };
+        }
+    }
+
+    function iniciarJogo() {
+        const checkExist = setInterval(function() {
+            if (document.getElementById("story-text")) {
+                renderNode(currentNode);
+                clearInterval(checkExist);
+            }
+        }, 100); 
+    }
+
+    iniciarJogo();
+
+</script>
+</body>
+</html>
